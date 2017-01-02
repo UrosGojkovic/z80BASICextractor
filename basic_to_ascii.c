@@ -142,7 +142,7 @@ void extract_basic(char* block)
           case 255: printf("COPY "); break;
         }
       }
-      printf("\n");
     }
+    printf("\n");
   }
 }
