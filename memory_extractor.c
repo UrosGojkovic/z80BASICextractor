@@ -189,7 +189,7 @@ int extract_pages()
 
     if (machine_type == forty)
     {
-      memory = calloc(3*PAGE_SIZE, 1); //allocate space for all of RAM
+      memory = calloc(3*PAGE_SIZE, 1); //allocate space for all of RAM and set to 0
       if (memory == NULL)
       {
         fatal_error("extract_pages(): Can't allocate memory");
@@ -216,7 +216,7 @@ int extract_pages()
 
 char* decompress(long int starting_offset, long int length)
 {
-  char* local_memory;
+  char* page;
   int end_of_string=0;
   if (length == 0)
   {
@@ -225,8 +225,8 @@ char* decompress(long int starting_offset, long int length)
   else
   {
     fseek(source, starting_offset, SEEK_SET);
-    local_memory = malloc(PAGE_SIZE);
-    if (local_memory == NULL)
+    page = malloc(PAGE_SIZE);
+    if (page == NULL)
     {
       fatal_error("decompress(): Can't allocate memory");
     }
@@ -250,7 +250,7 @@ char* decompress(long int starting_offset, long int length)
           int j;
           for (j=0; j < block_length; j++)
           {
-            local_memory[end_of_string] = content;
+            page[end_of_string] = content;
             end_of_string++;
           }
           i=i+3; //add the 3 extra bytes we read to the loop var
@@ -258,17 +258,17 @@ char* decompress(long int starting_offset, long int length)
         else
         {
           //it was just one 0xED
-          local_memory[end_of_string] = 0xED;
+          page[end_of_string] = 0xED;
           end_of_string++;
           fseek(source, cur_pos, SEEK_SET); //reset the position to the byte after 0xED
         }
       }
       else
       {
-        local_memory[end_of_string] = byte;
+        page[end_of_string] = byte;
         end_of_string++;
       }
     }
   }
-  return local_memory;
+  return page;
 }
