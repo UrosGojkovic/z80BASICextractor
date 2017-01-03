@@ -17,8 +17,6 @@
 #define PAGE_SIZE 16384
 #define PROG_VAR_ADDR 0x1C53
 #define VARS_VAR_ADDR 0x1C4B //BASIC program block ends with VARS (BASIC variables)
-#define MEM_OFF 0x4000
-#define BYTE_LEN 0x100
 
 void fatal_error(char* message);
 
