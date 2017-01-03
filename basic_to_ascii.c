@@ -3,25 +3,23 @@
 void extract_basic(char* block)
 {
   int prog_start_addr = block[PROG_VAR_ADDR]; //lower byte of the address of BASIC program
-  prog_start_addr += block[PROG_VAR_ADDR + 1]*0x100; //higher byte of the address of BASIC program
-  prog_start_addr -= 0x4000; //add the (negative) offset of block compared to the real memory layout
+  prog_start_addr += block[PROG_VAR_ADDR + 1]*BYTE_LEN; //higher byte of the address of BASIC program
+  prog_start_addr -= MEM_OFF; //add the (negative) offset of block compared to the real memory layout
 
   int prog_end_addr = block[VARS_VAR_ADDR]; //lower byte of the address of BASIC variables (end of program)
-  prog_end_addr = block[VARS_VAR_ADDR + 1]*0x100; //higher byte
-  prog_end_addr -= 0x4000; //same as above
+  prog_end_addr += block[VARS_VAR_ADDR + 1]*BYTE_LEN; //higher byte
+  prog_end_addr -= MEM_OFF; //same as above
 
-  int i;
-  int line_number;
-  int line_length;
+  int i, line_number, line_length;
   for(i = prog_start_addr; i < prog_end_addr; i += (line_length + 4)) //add 4 bytes for line number and line length
   {
-    line_number = (unsigned char) block[i] * 0x100; //added type casts to prevent compiler warnings
+    line_number = (unsigned char) block[i] * BYTE_LEN; //added type casts to prevent compiler warnings
     line_number += (unsigned char) block[i + 1];
     printf("%4d ", line_number);
-    line_length = (unsigned char) block[i + 2] * 0x100;
+    line_length = (unsigned char) block[i + 2] * BYTE_LEN;
     line_length += (unsigned char) block[i+3];
     int j;
-    for (j = i + 4; j < i + line_length + 4; j++)
+    for (j = i + 4; j < i + line_length; j++)
     {
       if ((unsigned char)block[j] == 14)
       {
@@ -33,7 +31,7 @@ void extract_basic(char* block)
         {
           printf(": "); //Spectrum adds space after semi-colon when printing
         }
-        if ((unsigned char) block[j] == '`')
+        else if ((unsigned char) block[j] == '`')
         {
           printf("GBP"); //Spectrum uses this character for GBP sign
           //a hack way to print UTF-8 version of this character
@@ -48,7 +46,8 @@ void extract_basic(char* block)
       {
         printf("(c)"); //copyright sign is missing in the ASCII table
         //a hack way to insert UTF-8 representation of the symbol, may not work in terminals
-        //printf("\xC2\xA9");
+        //printf("\xC2");
+        //printf("\xA9");
       }
       else if ((unsigned char) block[j] >= 165)
       {

@@ -159,7 +159,7 @@ int extract_pages()
       fread(&byte, 1, 1, source);
       len = byte; //lower byte comes first
       fread(&byte, 1, 1, source);
-      len += byte*0x100; //add higher byte
+      len += byte*BYTE_LEN; //add higher byte
       fread(&byte, 1, 1, source);
       if (is_compressed == TRUE)
       {
