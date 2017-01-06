@@ -3,6 +3,6 @@
 #include "common_functions.h"
 #include "memory_extractor.h"
 
-void extract_basic (unsigned char* block);
+void extract_basic (unsigned char* block, FILE* output, int cols);
 
 #endif // BASIC_TO_ASCII_H_INCLUDED

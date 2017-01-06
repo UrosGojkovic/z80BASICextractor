@@ -132,9 +132,9 @@ int extract_pages()
   printf("Begin extraction of pages...\n");
   unsigned char* pages[12];
   int i;
-  for (i=0; i<12; i++)
+  for (i = 0; i < 12; i++)
   {
-    pages[i]=NULL; //prep the array
+    pages[i] = NULL; //prep the array
   }
   unsigned char byte;
   int len;
@@ -154,7 +154,7 @@ int extract_pages()
         fatal_error("extract_pages(): Can't allocate memory");
       }
       fseek(source, 30, SEEK_SET);
-      if (fread(memory, 1, 3*PAGE_SIZE, source) != 3*PAGE_SIZE)
+      if (fread(memory, 1, 3 * PAGE_SIZE, source) != 3*PAGE_SIZE)
       {
         printf("ERROR: Memory block has less than 48k bytes!\n");
         exit(EXIT_FAILURE);
@@ -172,7 +172,7 @@ int extract_pages()
       fread(&byte, 1, 1, source);
       len = byte; //lower byte comes first
       fread(&byte, 1, 1, source);
-      len += byte*BYTE_LEN; //add higher byte
+      len += byte * BYTE_LEN; //add higher byte
       //get the page number
       fread(&byte, 1, 1, source);
       printf("Length of the block is %d...\n", len);
@@ -228,13 +228,13 @@ int extract_pages()
 
       if (pages[4] != NULL)
       {
-        memmove(memory+PAGE_SIZE, pages[4], PAGE_SIZE);
+        memmove(memory + PAGE_SIZE, pages[4], PAGE_SIZE);
         printf("Extracted page 4...\n");
       }
 
       if (pages[5] != NULL)
       {
-        memmove(memory+(2*PAGE_SIZE), pages[5], PAGE_SIZE);
+        memmove(memory + (2 * PAGE_SIZE), pages[5], PAGE_SIZE);
         printf("Extracted page 5...\n");
       }
     }
@@ -277,12 +277,12 @@ unsigned char* decompress(long int starting_offset, long int length)
           fread(&block_length, 1, 1, source);
           fread(&content, 1, 1, source);
           int j;
-          for (j=0; j < block_length; j++)
+          for (j = 0; j < block_length; j++)
           {
             page[end_of_string] = content;
             end_of_string++;
           }
-          i=i+3; //add the 3 extra bytes we read to the loop var
+          i=i + 3; //add the 3 extra bytes we read to the loop var
         }
         else
         {
