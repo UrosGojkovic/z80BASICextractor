@@ -13,7 +13,7 @@ int main(int argc, char** argv)
   }
   else
   {
-    printf("usage: Z80extractor [file name or path]\n");
+    printf("usage: z80extractor [file name or path]\n");
   }
   return 0;
 }
