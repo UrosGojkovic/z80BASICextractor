@@ -1,7 +1,7 @@
 #include "memory_extractor.h"
 
-const int excluded_page_numbers_forty[] = {2, 3, 6, 7, 9, 10};
-const int excluded_page_numbers_SamRam[] = {9, 10, 11};
+//const int excluded_page_numbers_forty[] = {2, 3, 6, 7, 9, 10};
+//const int excluded_page_numbers_SamRam[] = {9, 10, 11};
 
 int open_file(char* path)
 {
@@ -15,7 +15,7 @@ int open_file(char* path)
 
 int check_header()
 {
-  int version = 0;
+  version = 0;
   unsigned char byte;
   fseek(source, 6, SEEK_SET);
   fread(&byte, 1, 1, source);
@@ -32,17 +32,27 @@ int check_header()
       version = 1;
     }
   }
-  fseek(source, 12, SEEK_SET);
-  fread(&byte, 1, 1, source);
-  if (byte & 0x20)
+  if (version == 1)
   {
-    is_compressed = TRUE;
+    //if version is 1 check for the compression flag
+    fseek(source, 12, SEEK_SET);
+    fread(&byte, 1, 1, source);
+    if (byte & 0x10)
+    {
+      is_compressed = TRUE;
+    }
+    else
+    {
+      is_compressed = FALSE;
+    }
+    switch(is_compressed)
+    {
+      case TRUE: printf("File is compressed...\n"); break;
+      case FALSE: printf("File is not compressed...\n"); break;
+      default: break; //silently ignore other values
+    }
   }
   else
-  {
-    is_compressed = FALSE;
-  }
-  if (version != 1)
   {
     fseek(source, 30, SEEK_SET);
     fread(&byte, 1, 1, source);
@@ -119,7 +129,8 @@ int check_header()
 
 int extract_pages()
 {
-  char* pages[12];
+  printf("Begin extraction of pages...\n");
+  unsigned char* pages[12];
   int i;
   for (i=0; i<12; i++)
   {
@@ -153,38 +164,52 @@ int extract_pages()
   if (version > 1)
   {
     fseek(source, header_end, SEEK_SET);
-
+    long int end = ftell(source);
     while(!feof(source))
     {
+      fseek(source, end, SEEK_SET); //reset position to the value from the end of the loop
+      //get the length of the block
       fread(&byte, 1, 1, source);
       len = byte; //lower byte comes first
       fread(&byte, 1, 1, source);
       len += byte*BYTE_LEN; //add higher byte
+      //get the page number
       fread(&byte, 1, 1, source);
-      if (is_compressed == TRUE)
+      printf("Length of the block is %d...\n", len);
+      //higher version files do not use compression flag, instead they use the block length as an indicator
+      if (len == 0xffff)
       {
-        pages[byte] = decompress(ftell(source), len);
+        //uncompressed page
+         printf("Extracting uncompressed page %d...\n", byte);
+        pages[byte] = malloc(PAGE_SIZE);
+        if (pages[byte] == NULL)
+        {
+          fatal_error("extract_pages(): Can't allocate memory");
+        }
+        if (fread(pages[byte], 1, PAGE_SIZE, source) != PAGE_SIZE)
+        {
+          fatal_error("Unexpected end of stream");
+        }
       }
       else
       {
-        if (len == 0xffff)
-        {
-          pages[byte] = malloc(PAGE_SIZE);
-          if (pages[byte] == NULL)
-          {
-            fatal_error("extract_pages(): Can't allocate memory");
-          }
-          if (fread(pages[byte], 1, PAGE_SIZE, source) != PAGE_SIZE)
-          {
-            fatal_error("Unexpected end of stream");
-          }
-        }
-        else
-        {
-          fatal_error("Missmatch in file-format markers: page marked as uncompressed has less than maximum length");
-        }
+        //compressed page
+        printf("Extracting compressed page %d...\n", byte);
+        pages[byte] = decompress(ftell(source), len);
       }
+      //a trick to trigger EOF flag
+      /*
+        Explanation: our reading of the file is byte perfect and should stop when we read the last byte of the file.
+        But, EOF is triggered when we try to read PAST the last byte, which simply doesn't happen in our case.
 
+        So we use the next 2 lines to test the water:
+        - if it's the last byte, fread will trigger EOF and feof() will bring us out of the loop,
+        - if it's not the last byte we will use end variable to undo the reading of that extra byte.
+
+        The reason why we use "fseek-to-the-end" at the start of the loop (instead of doing it immediately after fread) is that fseek resets EOF flag, thus, nullfying what we are trying to do.
+      */
+      end = ftell(source); //save the current position so we can come back if it's not end of file
+      fread(&byte,1,1,source); //read a byte: if we are at the end we will trigger EOF
     }
 
     if (machine_type == forty)
@@ -198,29 +223,33 @@ int extract_pages()
       if (pages[8] != NULL)
       {
         memmove(memory, pages[8], PAGE_SIZE);
+        printf("Extracted page 8...\n");
       }
 
       if (pages[4] != NULL)
       {
         memmove(memory+PAGE_SIZE, pages[4], PAGE_SIZE);
+        printf("Extracted page 4...\n");
       }
 
       if (pages[5] != NULL)
       {
         memmove(memory+(2*PAGE_SIZE), pages[5], PAGE_SIZE);
+        printf("Extracted page 5...\n");
       }
     }
+    //TODO: if machine_type other than forty
   }
   return 0;
 }
 
-char* decompress(long int starting_offset, long int length)
+unsigned char* decompress(long int starting_offset, long int length)
 {
-  char* page;
+  unsigned char* page;
   int end_of_string=0;
   if (length == 0)
   {
-    //version 1 with single continous block
+    //TODO: version 1 with single continous block
   }
   else
   {

@@ -1,6 +1,6 @@
 #include"basic_to_ascii.h"
 
-void extract_basic(char* block)
+void extract_basic(unsigned char* block)
 {
   int prog_start_addr = block[PROG_VAR_ADDR]; //lower byte of the address of BASIC program
   prog_start_addr += block[PROG_VAR_ADDR + 1]*BYTE_LEN; //higher byte of the address of BASIC program
@@ -10,28 +10,30 @@ void extract_basic(char* block)
   prog_end_addr += block[VARS_VAR_ADDR + 1]*BYTE_LEN; //higher byte
   prog_end_addr -= MEM_OFF; //same as above
 
+  //printf("BASIC program begins at: %d, and ends at: %d. (in local memory space)\n", prog_start_addr, prog_end_addr);
+
   int i, line_number, line_length;
   for(i = prog_start_addr; i < prog_end_addr; i += (line_length + 4)) //add 4 bytes for line number and line length
   {
-    line_number = (unsigned char) block[i] * BYTE_LEN; //added type casts to prevent compiler warnings
-    line_number += (unsigned char) block[i + 1];
+    line_number = block[i] * BYTE_LEN; //added type casts to prevent compiler warnings
+    line_number += block[i + 1];
     printf("%4d ", line_number);
-    line_length = (unsigned char) block[i + 2] * BYTE_LEN;
-    line_length += (unsigned char) block[i+3];
+    line_length = block[i + 2];
+    line_length += block[i+3] * BYTE_LEN;
     int j;
-    for (j = i + 4; j < i + line_length; j++)
+    for (j = i + 4; j < i + line_length + 4; j++)
     {
-      if ((unsigned char)block[j] == 14)
+      if (block[j] == 14)
       {
         j += 5; //character value 14 marks the begining of number constant value after the constant's string representation; we don't need this so we just skip the next 5 bytes
       }
-      else if ((unsigned char) block[j] >= 32 && (unsigned char) block[j] <= 126)
+      else if (block[j] >= 32 && block[j] <= 126)
       {
-        if ((unsigned char) block[j] == ':')
+        if (block[j] == ':')
         {
           printf(": "); //Spectrum adds space after semi-colon when printing
         }
-        else if ((unsigned char) block[j] == '`')
+        else if (block[j] == '`')
         {
           printf("GBP"); //Spectrum uses this character for GBP sign
           //a hack way to print UTF-8 version of this character
@@ -42,16 +44,16 @@ void extract_basic(char* block)
           printf("%c", block[j]);
         }
       }
-      else if ((unsigned char) block[j] == 127)
+      else if (block[j] == 127)
       {
         printf("(c)"); //copyright sign is missing in the ASCII table
         //a hack way to insert UTF-8 representation of the symbol, may not work in terminals
         //printf("\xC2");
         //printf("\xA9");
       }
-      else if ((unsigned char) block[j] >= 165)
+      else if (block[j] >= 165)
       {
-        switch((unsigned char) block[j])
+        switch(block[j])
         {
           case 165: printf("RND "); break;
           case 166: printf("INKEY$ "); break;
