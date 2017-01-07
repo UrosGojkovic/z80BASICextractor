@@ -36,9 +36,9 @@ void extract_basic(unsigned char* block, FILE* output, int cols)
       {
         if (block[j] == '`')
         {
-          fprintf(output, "GBP"); //Spectrum uses this character for GBP sign
+          //fprintf(output, "GBP"); //Spectrum uses this character for GBP sign
           //a hack way to print UTF-8 version of this character
-          //fprintf(output, "\xC2\xA3");
+          fprintf(output, "\xC2\xA3");
         }
         else
         {
@@ -47,10 +47,9 @@ void extract_basic(unsigned char* block, FILE* output, int cols)
       }
       else if (block[j] == 127)
       {
-        fprintf(output, "(c)"); //copyright sign is missing in the ASCII table
+        //fprintf(output, "(c)"); //copyright sign is missing in the ASCII table
         //a hack way to insert UTF-8 representation of the symbol, may not work in terminals
-        //fprintf(output, "\xC2");
-        //fprintf(output, "\xA9");
+        fprintf(output, "\xC2\xA9");
       }
       else if (block[j] >= 165)
       {

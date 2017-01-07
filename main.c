@@ -64,10 +64,14 @@ int main(int argc, char** argv)
     check_header();
     extract_pages();
     extract_basic(memory, output, cols);
+    if (output != stdout)
+    {
+      fclose(output);
+    }
   }
   else
   {
-    printf("z80BASICextractor v1.0beta3\n\n");
+    printf("z80BASICextractor v1.0beta4\n\n");
     printf("usage: z80extractor [file name or path] [-o output_file] [-stdout]\n");
     //printf("-c\twrap lines to COLS number of characters, default: no wrapping\n");
     printf("-o\toutput to the specified file (it will be overwritten if exists!), default: output file has the same name as input with extension changed to .txt\n");

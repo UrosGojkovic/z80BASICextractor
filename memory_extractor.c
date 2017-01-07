@@ -1,8 +1,5 @@
 #include "memory_extractor.h"
 
-//const int excluded_page_numbers_forty[] = {2, 3, 6, 7, 9, 10};
-//const int excluded_page_numbers_SamRam[] = {9, 10, 11};
-
 int open_file(char* path)
 {
   source = fopen(path, "r+b");
@@ -240,12 +237,13 @@ int extract_pages()
     }
     //TODO: if machine_type other than forty
   }
+  fclose(source);
   return 0;
 }
 
 unsigned char* decompress(long int starting_offset, long int length)
 {
-  unsigned char* page;
+  unsigned char* page=NULL;
   int end_of_string=0;
   if (length == 0)
   {
