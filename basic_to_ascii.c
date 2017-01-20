@@ -169,3 +169,111 @@ void extract_basic(unsigned char* block, FILE* output, int cols)
     fprintf(output, "\n");
   }
 }
+
+void extract_basic_variables(unsigned char* block, FILE* output, int cols)
+{
+    int vars_begin_addr = block[VARS_VAR_ADDR];
+    vars_begin_addr += block[VARS_VAR_ADDR + 1] * BYTE_LEN; //higher byte
+    vars_begin_addr -= MEM_OFF;
+
+    int vars_end_addr = block[E_LINE_VAR_ADDR];
+    vars_end_addr += block[E_LINE_VAR_ADDR + 1] * BYTE_LEN;
+    vars_end_addr -= MEM_OFF;
+    int i, j;
+    for (i = vars_begin_addr; i < vars_end_addr; i++)
+    {
+        if((block[i] & 0xE0) == 0x80) //if the first 3 bits of the byte are 100
+        {
+            //it's an array of numbers
+        }
+        else if((block[i] & 0xE0) == 0xA0) // == 101
+        {
+            //it's a number with name longer than a single character
+        }
+        else if((block[i] & 0xE0) == 0xE0) // == 111
+        {
+            //it's a control variable for FOR-NEXT loop
+        }
+        else if((block[i] & 0xE0) == 0x40) // == 010
+        {
+            //it's a string
+        }
+        else if((block[i] & 0xE0) == 0xC0) // == 110
+        {
+            //it's an array of charcters (single byte values)
+        }
+        else
+        {
+            //it's none of the above, so it's probably a number variable named with a single letter
+            if(block[i] > 32 && block[i] < 128) //printable ASCII, without space
+            {
+                //assume it's a variable name
+                fprintf(output,"%c = ", block[i]);
+                //the next five bytes are the value
+                unsigned char number[5];
+                for (j = 0; j < 5; j++)
+                {
+                    number[j] = block[i + 1 + j];
+                }
+                fprintf(output, "%lf\n", convert_number(number));
+                i += 6; //variable name (1 character) + 5 bytes of value
+            }
+        }
+    }
+}
+
+double convert_number(unsigned char number[5])
+{
+    if(number[0] == 0 && (number[1] == 0 || number[1] == 0xFF) && number[5] == 0) //check if it's a 16-bit (sort of) signed integer (N-th complement) or a really small number
+    {
+        //it's definitely a 16-bit integer
+        int converted_value = 0;
+        if(number[1] == 0) //if it's a positive
+        {
+            converted_value = number[3] + number[4]*BYTE_LEN;
+            return (double) converted_value;
+        }
+        else
+        {
+            //it's a negative
+            converted_value = ~converted_value; //turn zeros into ones (fill with ones since the starting value is all zeros)
+            converted_value ^= 0xFFFF; //turn the last 2 bytes to zeroes again
+            converted_value = number[3] + number[4]*BYTE_LEN;
+            return (double) converted_value;
+            //this method works on Intel architecture regardless of integer size (but must be bigger than 16 bits)
+        }
+    }
+    else
+    {
+        //it's a floating point number
+        double exponent = pow(2, number[0] - 128); //the real exponent
+        double mantissa = 0;
+        double current_position_value = 0.5;
+        double sign;
+        if ((number[1] & 0x80) == 0x80)
+        {
+            //the first bit is 1 -> negative
+            sign = -1;
+        }
+        else
+        {
+            sign = 1; //it's positive
+            number[1] |= 0x80; //make implicit 1 appear again (replacing the 0 as the sign) for the next step
+        }
+        int i, j;
+        for (i = 1; i < 4; i++)
+        {
+            for(j = 0; j < 8; j++)
+            {
+                if((number[i] & 0x80) == 0x80)
+                {
+                    mantissa += current_position_value;
+                }
+                number[i] <<= 1;
+                current_position_value /= 2;
+            }
+        }
+        return (sign*mantissa*exponent);
+
+    }
+}

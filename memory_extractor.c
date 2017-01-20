@@ -73,7 +73,7 @@ int check_header()
     }
     fseek(source, 34, SEEK_SET);
     fread(&byte, 1, 1, source);
-    char* type;
+    char* type = "unknown";
     if (version == 2)
     {
       switch(byte)
@@ -92,7 +92,7 @@ int check_header()
         case  14: type = "TC2048"; break;
         case  15: type = "TC2068"; break;
         case 128: type = "TS2068"; break;
-        default: type = "unknown"; break;
+        default: break;
       }
     }
     if (version == 3)
@@ -115,7 +115,7 @@ int check_header()
         case  14: type = "TC2048"; break;
         case  15: type = "TC2068"; break;
         case 128: type = "TS2068"; break;
-        default: type = "unknown"; break;
+        default: break;
       }
     }
     //missing hardware type modifier check

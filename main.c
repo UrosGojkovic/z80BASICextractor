@@ -64,6 +64,7 @@ int main(int argc, char** argv)
     check_header();
     extract_pages();
     extract_basic(memory, output, cols);
+    extract_basic_variables(memory, stdout, cols);
     if (output != stdout)
     {
       fclose(output);
