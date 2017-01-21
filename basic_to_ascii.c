@@ -215,7 +215,7 @@ void extract_basic_variables(unsigned char* block, FILE* output, int cols)
                 {
                     number[j] = block[i + 1 + j];
                 }
-                fprintf(output, "%lf\n", convert_number(number));
+                fprintf(output, "%g\n", convert_number(number));
                 i += 6; //variable name (1 character) + 5 bytes of value
             }
         }
@@ -274,6 +274,5 @@ double convert_number(unsigned char number[5])
             }
         }
         return (sign*mantissa*exponent);
-
     }
 }
