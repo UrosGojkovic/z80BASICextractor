@@ -2,7 +2,6 @@
 
 int open_file(char* path)
 {
-  printf("%s\n", path);
   source = fopen(path, "r+b");
   if (source == NULL)
   {

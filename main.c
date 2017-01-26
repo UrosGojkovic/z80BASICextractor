@@ -61,7 +61,6 @@ int main(int argc, char** argv)
   if (argc > 1)
   {
     process_command_arguments(argc, argv);
-    //open_file("D:\\My Documents\\Qt Projects\\Z80 Spectrum BASIC extractor\\bin\\Debug\\test_vars_arrays.z80");
     check_header();
     extract_pages();
     extract_basic(memory, output, cols);
