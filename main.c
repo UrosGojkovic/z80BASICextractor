@@ -105,7 +105,7 @@ void process_command_arguments(int argc, char** argv)
       output = fopen(path_for_list, "w");
       if (output == NULL)
       {
-        //fatal_error("process_command_arguments(): Can't open file for program output");
+        fatal_error("process_command_arguments(): Can't open file for program output");
       }
     }
 
