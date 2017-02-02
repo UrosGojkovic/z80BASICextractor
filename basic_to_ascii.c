@@ -211,7 +211,7 @@ void extract_basic_variables(unsigned char* block, FILE* output, int cols)
       {
         number[j] = block[i + j];
       }
-      fprintf(output, "%g\n", convert_number(number));
+      fprintf(output, "%s\n", convert_number(number));
       i += 5;
     }
     else if((block[i] & 0xE0) == 0xE0) // == 111
@@ -224,19 +224,19 @@ void extract_basic_variables(unsigned char* block, FILE* output, int cols)
         number[j] = block[i + j];
       }
       i += 5;
-      fprintf(output, "%g", convert_number(number));
+      fprintf(output, "%s", convert_number(number));
       for (j = 0; j < 5; j++)
       {
         number[j] = block[i + j];
       }
       i += 5;
-      fprintf(output, " to %g, ", convert_number(number));
+      fprintf(output, " to %s, ", convert_number(number));
       for (j = 0; j < 5; j++)
       {
         number[j] = block[i + j];
       }
       i += 5;
-      fprintf(output, "step %g, ", convert_number(number));
+      fprintf(output, "step %s, ", convert_number(number));
       int loop_line = block[i] + block[i + 1] * BYTE_LEN;
       i += 2;
       int statement_number = block[i];
@@ -274,16 +274,15 @@ void extract_basic_variables(unsigned char* block, FILE* output, int cols)
         {
           number[j] = block[i + 1 + j];
         }
-        fprintf(output, "%g\n", convert_number(number));
+        fprintf(output, "%s\n", convert_number(number));
         i += 6; //shift for 5 bytes of value + 1 byte of letter
       }
     }
   }
 }
 
-double convert_number(unsigned char number[5])
+char* convert_number(unsigned char number[5])
 {
-  //TODO: Burger's float to decimal conversion algorithm
   if(number[0] == 0 && (number[1] == 0 || number[1] == 0xFF) && number[4] == 0) //check if it's a 16-bit (sort of) signed integer (N-th complement), used for integers in +/- 65536 range.
   {
     //it's definitely a 16-bit integer
@@ -291,7 +290,7 @@ double convert_number(unsigned char number[5])
     if(number[1] == 0) //if it's a positive
     {
       converted_value = number[2] + number[3]*BYTE_LEN;
-      return (double) converted_value;
+      sprintf(buffer, "%d", converted_value);
     }
     else
     {
@@ -299,16 +298,16 @@ double convert_number(unsigned char number[5])
       converted_value = ~converted_value; //turn zeros into ones (fill with ones since the starting value is all zeros)
       converted_value ^= 0xFFFF; //turn the last 2 bytes to zeroes again
       converted_value = number[2] + number[3]*BYTE_LEN;
-      return (double) converted_value; //now we have the number written as 32-bit signed (N-th complement) integer
+      sprintf(buffer, "%d", converted_value);
     }
   }
   else
   {
     //it's a floating point number
     double exponent = pow(2, number[0] - 128); //the real exponent
+    int sign;
     double mantissa = 0;
-    double current_position_value = 0.5;
-    double sign;
+    double current_value = 0.5;
     if ((number[1] & 0x80) == 0x80)
     {
       //the first bit is 1 -> negative
@@ -326,14 +325,15 @@ double convert_number(unsigned char number[5])
       {
         if((number[i] & 0x80) == 0x80)
         {
-          mantissa += current_position_value;
+          mantissa += current_value;
         }
         number[i] <<= 1;
-        current_position_value /= 2;
+        current_value /= 2;
       }
     }
-    return (sign*mantissa*exponent);
+    sprintf(buffer, "%.7f", sign * mantissa * exponent);
   }
+  return buffer;
 }
 
 int iterate_over_array(unsigned char* start, int element_length, FILE* output)
@@ -387,7 +387,7 @@ void iterate(int current_dimension, int max_dimension, int* dimension_size, int*
         number[i] = start[array_index];
         array_index++;
       }
-      fprintf(output, "%g\n", convert_number(number));
+      fprintf(output, "%s\n", convert_number(number));
 
     }
     if (element_size == 1)
