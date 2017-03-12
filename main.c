@@ -68,23 +68,29 @@ void process_command_arguments(int argc, char** argv)
     if (list_only != TRUE)
     {
       path_len = strlen(argv[output_file_index]);
-      path_for_vars = malloc(path_len + 6); //we remove the extension from the provided path and replace it with "-vars.txt" to mark the files with variables
-      if (path_for_vars == NULL)
-      {
-        fatal_error("process_command_arguments(): Can't allocate memory");
-      }
-      path_for_vars = strcpy(path_for_vars, argv[output_file_index]); //copy the path to the enlarged buffer
-      extension_begin = strrchr(path_for_vars, '.'); //get the pointer to the last . in the filename
+      extension_begin = strchr(argv[output_file_index], '.');
       if (extension_begin == NULL)
       {
-        path_for_vars = realloc(path_for_vars, path_len + 10); //if there is no extension, add sufix to the end of file name
+        path_for_vars = malloc(path_len + 10); //if there is no extension, add sufix to the end of file name
         if (path_for_vars == NULL)
         {
           fatal_error("process_command_arguments(): Can't allocate memory");
         }
-        extension_begin = &(path_for_vars[path_len]);
+        extension_begin = &(path_for_vars[path_len]); //set the begining of the suffix to the end of old string
       }
-      extension_begin = strcpy(extension_begin, "-vars.txt"); //overwrite the end
+      else
+      {
+        //there is an extension
+        int base_len = extension_begin - argv[output_file_index];
+        path_for_vars = malloc(base_len + 10); //add 10 bytes for the suffix
+        if (path_for_vars == NULL)
+        {
+          fatal_error("process_command_arguments(): Can't allocate memory");
+        }
+        path_for_vars = strncpy(path_for_vars, argv[output_file_index], base_len); //copy the base of the path to the new file path
+        extension_begin = &(path_for_vars[base_len]); //set the begining of the suffix to the end of base path
+      }
+      extension_begin = strcpy(extension_begin, "-vars.txt"); //add suffix
       vars_output = fopen(path_for_vars, "w");
       if (vars_output == NULL)
       {
