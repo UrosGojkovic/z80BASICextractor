@@ -6,7 +6,6 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h>
-#include <mpfr.h>
 
 #ifndef TRUE
 #define TRUE 1

@@ -297,7 +297,7 @@ char* convert_number(unsigned char number[5])
       //it's a negative
       converted_value = ~converted_value; //turn zeros into ones (fill with ones since the starting value is all zeros)
       converted_value ^= 0xFFFF; //turn the last 2 bytes to zeroes again
-      converted_value = number[2] + number[3]*BYTE_LEN;
+      converted_value += number[2] + number[3]*BYTE_LEN;
       sprintf(buffer, "%d", converted_value);
     }
   }
@@ -319,7 +319,7 @@ char* convert_number(unsigned char number[5])
       number[1] |= 0x80; //make implicit 1 appear again (replacing the 0 as the sign) for the next step
     }
     int i, j;
-    for (i = 1; i < 4; i++)
+    for (i = 1; i < 5; i++)
     {
       for(j = 0; j < 8; j++)
       {
@@ -331,7 +331,7 @@ char* convert_number(unsigned char number[5])
         current_value /= 2;
       }
     }
-    sprintf(buffer, "%.7f", sign * mantissa * exponent);
+    sprintf(buffer, "%.8g", sign * mantissa * exponent);
   }
   return buffer;
 }

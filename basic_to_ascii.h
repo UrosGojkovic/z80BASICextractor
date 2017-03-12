@@ -5,7 +5,6 @@
 
 int array_index; //used when traversing arrays
 char buffer[50]; //output buffer for printing numbers;
-
 void extract_basic (unsigned char* block, FILE* output, int cols);
 void extract_basic_variables (unsigned char* block, FILE* output, int cols);
 char* convert_number (unsigned char number[5]);
