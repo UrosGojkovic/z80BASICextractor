@@ -243,13 +243,77 @@ int extract_pages()
 
 unsigned char* decompress(long int starting_offset, long int length)
 {
-  unsigned char* page=NULL;
-  int end_of_string=0;
-  if (length == 0)
+  unsigned char* page = NULL;
+  int end_of_string = 0;
+  unsigned char byte;
+  long int cur_pos;
+  long int i;
+  if (length == 0) //version 1: single block of memory (no paging)
   {
-    //TODO: version 1 with single continous block
+    fseek(source, starting_offset, SEEK_SET);
+    page = malloc(3 * PAGE_SIZE);
+    if (page == NULL)
+    {
+      fatal_error("decompress(): Can't allocate memory");
+    }
+    long int i;
+    unsigned char byte;
+    int end_of_block = FALSE;
+    while (!end_of_block)
+    {
+      fread(&byte, 1, 1, source);
+      if (byte == 0x00) //check if we reached the end of memory block by checking if we found sequence "00 ED ED 00"
+      {
+        cur_pos = ftell(source); //store the current position in case it was just a 00 byte
+        unsigned char sequence[3];
+        fread(sequence, 1, 3, source);
+        if (sequence[0] == 0xED && sequence[1] == 0xED && sequence[2] == 0x00) //we found the end
+        {
+          end_of_block = TRUE;
+        }
+        else
+        {
+          //it's not a sequence we were looking for
+          page[end_of_string] = byte;
+          end_of_string++;
+          fseek(source, cur_pos, SEEK_SET);
+        }
+      }
+      else if (byte == 0xED)
+      {
+        cur_pos = ftell(source); //address of 0xED byte+1
+        fread(&byte, 1, 1, source);
+        if (byte == 0xED)
+        {
+          //there were two ED next to each other => apply decompression
+          unsigned char block_length;
+          unsigned char content;
+          fread(&block_length, 1, 1, source);
+          fread(&content, 1, 1, source);
+          int j;
+          for (j = 0; j < block_length; j++)
+          {
+            page[end_of_string] = content;
+            end_of_string++;
+          }
+          i = i + 3; //add the 3 extra bytes we read to the loop var
+        }
+        else
+        {
+          //it was just one 0xED
+          page[end_of_string] = 0xED;
+          end_of_string++;
+          fseek(source, cur_pos, SEEK_SET); //reset the position to the byte after 0xED
+        }
+      }
+      else
+      {
+        page[end_of_string] = byte;
+        end_of_string++;
+      }
+    }
   }
-  else
+  else //version > 1: paged memory
   {
     fseek(source, starting_offset, SEEK_SET);
     page = malloc(PAGE_SIZE);
@@ -257,15 +321,13 @@ unsigned char* decompress(long int starting_offset, long int length)
     {
       fatal_error("decompress(): Can't allocate memory");
     }
-    long int i;
     long int end = starting_offset + length;
-    unsigned char byte;
     for(i = starting_offset; i < end; i++)
     {
       fread(&byte, 1, 1, source);
       if (byte == 0xED)
       {
-        long int cur_pos = ftell(source); //address of 0xED byte+1
+        cur_pos = ftell(source); //address of 0xED byte+1
         fread(&byte, 1, 1, source);
         if (byte == 0xED)
         {

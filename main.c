@@ -162,7 +162,7 @@ int main(int argc, char** argv)
   }
   else
   {
-    printf("z80BASICextractor v1.0beta5\n\n");
+    printf("z80BASICextractor v1.0beta6\n\n");
     printf("usage: z80extractor [input file name or path] [-o output_file] [-stdout] [-list] [-vars]\n");
     //printf("-c\twrap lines to COLS number of characters, default: no wrapping\n");
     printf("default: program output files have the same name as input with extension changed to '.txt' for listings and '-vars.txt' for variables.\n");
